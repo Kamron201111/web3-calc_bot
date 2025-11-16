@@ -1,277 +1,617 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Web3 Super Calculator DApp</title>
+  <title>Kamron Web3 Super DApp</title>
+
   <!-- Web3.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.10.0/web3.min.js"></script>
-  <!-- Kuchli matematik kutubxona -->
+  <!-- math.js (ilmiy kalkulyator) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+
   <style>
+    :root {
+      --bg: #05060a;
+      --card: #111827;
+      --accent: #6366f1;
+      --accent-soft: rgba(99,102,241,0.12);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #05060a;
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      text-align: center;
-      padding: 30px 12px;
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
     }
-    h1 {
-      margin-bottom: 18px;
+    h1 { text-align:center; margin-bottom: 10px; }
+    .subtitle { text-align:center; color:var(--muted); font-size:13px; margin-bottom:16px; }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
     }
+
+    /* NAV TABS */
+    .tabs {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:center;
+      margin-bottom:16px;
+    }
+    .tab-btn {
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.4);
+      background:#020617;
+      color:var(--muted);
+      font-size:13px;
+      cursor:pointer;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color:white;
+      border-color:transparent;
+      box-shadow:0 0 16px var(--accent-soft);
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: minmax(0,1.3fr) minmax(0,1fr);
+      gap:16px;
+    }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr;}
+    }
+
     .card {
-      max-width: 480px;
-      margin: 0 auto 20px auto;
-      padding: 20px 16px 24px;
-      background: radial-gradient(circle at top, #222b3b, #111319);
-      border-radius: 16px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      background: var(--card);
+      border-radius:16px;
+      padding:16px 14px 18px;
+      box-shadow:0 0 20px rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.2);
     }
-    .section-title {
-      font-size: 20px;
-      margin: 10px 0 8px;
+    .card h2 {
+      font-size:18px;
+      margin-bottom:6px;
     }
-    .subtitle {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 8px;
+    .small {
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:8px;
     }
-    input, select {
-      width: 100%;
-      max-width: 440px;
-      padding: 10px 12px;
-      margin: 6px 0;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-      box-sizing: border-box;
+    .pill {
+      display:inline-block;
+      padding:4px 8px;
+      font-size:11px;
+      border-radius:999px;
+      background:rgba(15,118,110,0.2);
+      color:#6ee7b7;
+      margin-bottom:6px;
     }
+
+    input, select, textarea {
+      width:100%;
+      padding:9px 10px;
+      border-radius:10px;
+      border:none;
+      background:#020617;
+      color:var(--text);
+      font-size:14px;
+      margin-top:4px;
+      margin-bottom:8px;
+    }
+    textarea { min-height:70px; resize:vertical; }
+
     button {
-      padding: 10px 14px;
-      margin-top: 10px;
-      font-size: 16px;
-      background: #2563eb;
-      color: #fff;
-      border: none;
-      border-radius: 999px;
-      cursor: pointer;
-      min-width: 180px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:none;
+      background:var(--accent);
+      color:white;
+      font-size:14px;
+      cursor:pointer;
+      margin-top:4px;
     }
-    button:hover {
-      filter: brightness(1.05);
+    button:hover { filter:brightness(1.05); }
+    button:disabled {
+      opacity:0.6;
+      cursor:not-allowed;
     }
-    .btn-secondary {
-      background: #1f2937;
-      margin: 4px;
-      min-width: 60px;
+    .btn-secondary{
+      background:#020617;
+      border:1px solid rgba(148,163,184,0.4);
+      color:var(--muted);
     }
-    .btn-fn {
-      background: #111827;
-      font-size: 14px;
-      min-width: 70px;
+    .btn-danger{
+      background:#7f1d1d;
     }
-    #result, #fxResult {
-      font-size: 18px;
-      margin-top: 10px;
-      min-height: 22px;
-    }
-    #wallet {
-      word-break: break-all;
-      font-size: 13px;
-    }
+
     .row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 4px;
-      margin-top: 6px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:4px;
+      margin-bottom:4px;
     }
-    .label-row {
-      text-align: left;
-      font-size: 13px;
-      opacity: 0.85;
-      margin-top: 6px;
+    .chip {
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.4);
+      font-size:11px;
+      color:var(--muted);
+    }
+    .value {
+      font-weight:600;
+      font-size:15px;
+      margin-top:2px;
+      word-break:break-all;
+    }
+    .muted { color:var(--muted); font-size:12px; }
+    .ok { color:var(--success); }
+    .bad { color:var(--danger); }
+    .section-title { font-size:14px; margin-top:6px; margin-bottom:2px; }
+
+    .progress {
+      height:8px;
+      width:100%;
+      border-radius:999px;
+      background:#020617;
+      overflow:hidden;
+      margin-top:4px;
+    }
+    .progress-inner{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#22c55e,#eab308,#ef4444);
+      transition:width .3s ease;
+    }
+
+    /* Hiding / showing tabs */
+    .tab-page { display:none; }
+    .tab-page.active { display:block; }
+
+    .tag {
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:rgba(148,163,184,0.16);
+      margin-right:4px;
     }
   </style>
 </head>
 <body>
-  <h1>Web3 Super Calculator DApp</h1>  <!-- Wallet -->  <div class="card">
-    <div class="section-title">Wallet holati</div>
-    <p id="wallet">Ulanmagan</p>
-    <button onclick="connectWallet()">🔗 Metamask'ga ulanish</button>
-  </div>  <!-- Advanced Calculator -->  <div class="card">
-    <div class="section-title">🧮 Mukammal kalkulyator</div>
-    <div class="subtitle">Oddiy, ilmiy va foizli hisob-kitoblar: +, -, *, /, %, sqrt(), sin(), cos(), tan(), log(), pi, e va boshqalar.</div><input type="text" id="expr" placeholder="Masalan: 2*sqrt(3) + sin(pi/4)" />
+<div class="app">
+  <h1>Kamron Web3 Super DApp</h1>
+  <p class="subtitle">Wallet + Kalkulyator + Valyuta + Mini Game + Profil — hammasi bitta sahifada 👑</p>
 
-<div class="row">
-  <button class="btn-secondary" onclick="insertToken('7')">7</button>
-  <button class="btn-secondary" onclick="insertToken('8')">8</button>
-  <button class="btn-secondary" onclick="insertToken('9')">9</button>
-  <button class="btn-secondary" onclick="insertToken('/')">/</button>
+  <!-- NAV TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">🏠 Dashboard</button>
+    <button class="tab-btn" data-tab="wallet">💳 Wallet</button>
+    <button class="tab-btn" data-tab="calculator">🧮 Calculator</button>
+    <button class="tab-btn" data-tab="fx">🌍 FX & Crypto</button>
+    <button class="tab-btn" data-tab="game">🎮 Click Game</button>
+    <button class="tab-btn" data-tab="profile">👤 Profile & Stats</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="tab-page active">
+    <div class="grid">
+      <div class="card">
+        <h2>Wallet Overview</h2>
+        <p class="small">Metamask orqali ulanib, balans va tarmoqni ko‘rasiz.</p>
+        <span class="pill" id="netLabel">Network: not connected</span>
+
+        <div class="section-title">Wallet address</div>
+        <div class="value" id="dashAddress">—</div>
+
+        <div class="section-title">Native balance</div>
+        <div class="value" id="dashBalance">—</div>
+        <p class="muted" id="dashBalanceFiat"></p>
+
+        <button onclick="connectMetamask()">🔗 Connect Metamask</button>
+      </div>
+
+      <div class="card">
+        <h2>Quick Stats</h2>
+        <p class="small">Mini o‘yin va hisob-kitob statistikasi.</p>
+
+        <div class="section-title">K-points (o‘yin ballari)</div>
+        <div class="value" id="statPoints">0</div>
+        <div class="progress"><div class="progress-inner" id="pointsBar"></div></div>
+
+        <div class="section-title">Hisob-kitoblar soni</div>
+        <div class="value" id="statCalcs">0</div>
+
+        <div class="section-title">So‘ngi ulanish holati</div>
+        <p class="muted" id="statLastLogin">—</p>
+
+        <button class="btn-secondary" onclick="resetLocal()">♻ Lokal ma’lumotlarni tozalash</button>
+        <p class="muted">Faqat shu brauzerdagi localStorage tozalanadi, blockchain ma’lumotlariga tegmaydi.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WALLET -->
+  <section id="wallet" class="tab-page">
+    <div class="grid">
+      <div class="card">
+        <h2>Wallet & Network</h2>
+        <p class="small">Metamask orqali Web3 ulanish. Yuborishdan oldin manzilni tekshiring.</p>
+
+        <button onclick="connectMetamask()">🔗 Connect Metamask</button>
+
+        <div class="section-title">Holat</div>
+        <p class="value" id="walletStatus">Not connected</p>
+
+        <div class="section-title">Address</div>
+        <p class="value" id="walletAddress">—</p>
+
+        <div class="section-title">Network</div>
+        <p class="value" id="walletNetwork">—</p>
+
+        <div class="section-title">Native balance</div>
+        <p class="value" id="walletBalance">—</p>
+      </div>
+
+      <div class="card">
+        <h2>ERC-20 Token tools</h2>
+        <p class="small">Token balans ko‘rish va jo‘natish (standart ERC-20).</p>
+
+        <label class="section-title">Token contract address</label>
+        <input id="erc20Address" placeholder="0x..." />
+
+        <label class="section-title">Token decimals</label>
+        <input id="erc20Decimals" type="number" placeholder="18" />
+
+        <label class="section-title">Symbol (faqat ko‘rsatish uchun)</label>
+        <input id="erc20Symbol" placeholder="USDT" />
+
+        <button class="btn-secondary" onclick="readErc20Balance()">Balansni ko‘rish</button>
+        <p class="value" id="erc20Balance">—</p>
+
+        <hr style="border-color:rgba(148,163,184,0.25);margin:10px 0;">
+
+        <div class="section-title">Token yuborish</div>
+        <input id="erc20To" placeholder="Qabul qiluvchi address" />
+        <input id="erc20Amount" placeholder="Miqdor (mas: 10.5)" />
+
+        <button class="btn-danger" onclick="sendErc20()">⚠ Token yuborish</button>
+        <p class="muted">Transaction Metamask’da tasdiqlanadi. Manzilni diqqat bilan tekshiring.</p>
+        <p class="muted" id="erc20TxStatus"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section id="calculator" class="tab-page">
+    <div class="grid">
+      <div class="card">
+        <h2>Advanced Calculator</h2>
+        <p class="small">math.js bilan kuchli ilmiy kalkulyator: +, -, *, /, %, sqrt, sin, cos, tan, log, pi, e, ^ va hokazo.</p>
+
+        <textarea id="expr" placeholder="Masalan: 2*sqrt(3) + sin(pi/4) ^ 2"></textarea>
+        <div class="row">
+          <button class="btn-secondary" onclick="insertToken('(')">(</button>
+          <button class="btn-secondary" onclick="insertToken(')')">)</button>
+          <button class="btn-secondary" onclick="insertToken('pi')">π</button>
+          <button class="btn-secondary" onclick="insertToken('e')">e</button>
+        </div>
+        <div class="row">
+          <button class="btn-secondary" onclick="insertToken('sqrt(')">sqrt</button>
+          <button class="btn-secondary" onclick="insertToken('sin(')">sin</button>
+          <button class="btn-secondary" onclick="insertToken('cos(')">cos</button>
+          <button class="btn-secondary" onclick="insertToken('tan(')">tan</button>
+        </div>
+        <div class="row">
+          <button class="btn-secondary" onclick="insertToken('log10(')">log10</button>
+          <button class="btn-secondary" onclick="insertToken('log(')">ln</button>
+          <button class="btn-secondary" onclick="insertToken('^')">^</button>
+          <button class="btn-secondary" onclick="clearExpr()">🧹 Clear</button>
+        </div>
+
+        <button onclick="calculate()">Hisoblash</button>
+        <p class="value" id="calcResult"></p>
+        <p class="muted" id="calcError"></p>
+      </div>
+
+      <div class="card">
+        <h2>Tezkor formulalar</h2>
+        <p class="small">Kichik yordamchi kalkulyatorlar.</p>
+
+        <div class="section-title">Foiz hisoblash (amount * percent / 100)</div>
+        <div class="row">
+          <input id="pAmount" placeholder="Miqdor" />
+          <input id="pPercent" placeholder="Foiz (%)" />
+        </div>
+        <button class="btn-secondary" onclick="calcPercent()">Hisobla</button>
+        <p class="value" id="pResult"></p>
+
+        <div class="section-title">Kredit bo‘lib to‘lash (oddiy)</div>
+        <input id="loanSum" placeholder="Umumiy summa" />
+        <input id="loanMonths" placeholder="Oylari soni" />
+        <button class="btn-secondary" onclick="calcLoan()">Oylik to‘lov</button>
+        <p class="value" id="loanResult"></p>
+
+        <div class="section-title">Natijalar soni</div>
+        <p class="value" id="calcCount">0</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FX & CRYPTO -->
+  <section id="fx" class="tab-page">
+    <div class="grid">
+      <div class="card">
+        <h2>Fiat & Crypto Converter</h2>
+        <p class="small">Deyarli barcha fiat + mashhur kriptolar. Kurslar onlayn API’dan olinadi.</p>
+
+        <div class="section-title">Miqdor</div>
+        <input id="fxAmount" type="number" placeholder="100" />
+
+        <div class="section-title">Qaysidan</div>
+        <select id="fxFrom"></select>
+
+        <div class="section-title">Qaysiga</div>
+        <select id="fxTo"></select>
+
+        <button onclick="convertFX()">Hisoblash</button>
+
+        <p class="value" id="fxResult">—</p>
+        <p class="muted" id="fxInfo"></p>
+      </div>
+
+      <div class="card">
+        <h2>Tez tanlovlar</h2>
+        <p class="small">Bir marta bosish bilan mashhur juftliklar.</p>
+        <div class="row">
+          <button class="btn-secondary" onclick="quickFX(1,'USD','UZS')">1 USD → UZS</button>
+          <button class="btn-secondary" onclick="quickFX(1,'EUR','USD')">1 EUR → USD</button>
+          <button class="btn-secondary" onclick="quickFX(1,'USD','EUR')">1 USD → EUR</button>
+        </div>
+        <div class="row">
+          <button class="btn-secondary" onclick="quickFX(1,'BTC','USD')">1 BTC → USD</button>
+          <button class="btn-secondary" onclick="quickFX(1,'ETH','USD')">1 ETH → USD</button>
+          <button class="btn-secondary" onclick="quickFX(100,'USDT','UZS')">100 USDT → UZS</button>
+        </div>
+
+        <p class="section-title">Kripto qisqartmalar</p>
+        <p class="muted">
+          <span class="tag">BTC = bitcoin</span>
+          <span class="tag">ETH = ethereum</span>
+          <span class="tag">BNB = binancecoin</span>
+          <span class="tag">MATIC = matic-network</span>
+          <span class="tag">SOL = solana</span>
+          <span class="tag">TON = the-open-network</span>
+          <span class="tag">USDT = tether</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="tab-page">
+    <div class="grid">
+      <div class="card">
+        <h2>Kamron Clicker</h2>
+        <p class="small">Hamster / Epic Gift uslubidagi oddiy click game. Ballar localStorage’da saqlanadi.</p>
+
+        <div class="section-title">Umumiy K-points</div>
+        <p class="value" id="gamePoints">0</p>
+        <div class="progress"><div class="progress-inner" id="gameBar"></div></div>
+
+        <div class="section-title">Joriy multiplikator</div>
+        <p class="value" id="gameMult">x1</p>
+        <p class="muted" id="gameMsg"></p>
+
+        <button style="margin-top:12px;font-size:18px;padding:12px 20px;" onclick="tap()">🟣 TAP</button>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn-secondary" onclick="buyMulti(2,50)">x2 (50 KP)</button>
+          <button class="btn-secondary" onclick="buyMulti(5,200)">x5 (200 KP)</button>
+          <button class="btn-secondary" onclick="buyMulti(10,500)">x10 (500 KP)</button>
+        </div>
+
+        <button class="btn-secondary" onclick="softResetGame()">Soft reset</button>
+        <p class="muted">Soft reset multiplikatorni x1 qiladi, lekin ballaring qoladi.</p>
+      </div>
+
+      <div class="card">
+        <h2>Kunlik bonus</h2>
+        <p class="small">Har kuni bir marta bepul bonus.</p>
+
+        <p class="section-title">Bugungi holat</p>
+        <p class="value" id="bonusStatus">—</p>
+
+        <button onclick="claimDaily()">🎁 Bonus olish</button>
+        <p class="muted" id="bonusMsg"></p>
+
+        <div class="section-title">Eng yaxshi natija</div>
+        <p class="value" id="bestPoints">0</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="profile" class="tab-page">
+    <div class="grid">
+      <div class="card">
+        <h2>Profil</h2>
+        <p class="small">Shaxsiy nickname va sozlamalar.</p>
+
+        <div class="section-title">Nickname</div>
+        <input id="profileName" placeholder="Kamron201" />
+        <button class="btn-secondary" onclick="saveProfile()">Saqlash</button>
+
+        <div class="section-title">Saqlangan ma’lumotlar</div>
+        <p class="value" id="profileSummary">—</p>
+      </div>
+
+      <div class="card">
+        <h2>Statistika (local admin panel)</h2>
+        <p class="small">Faqat shu brauzer uchun ko‘rinadigan local statistikalar.</p>
+
+        <div class="section-title">Umumiy K-points</div>
+        <p class="value" id="admPoints">0</p>
+
+        <div class="section-title">Hisob-kitoblar soni</div>
+        <p class="value" id="admCalcs">0</p>
+
+        <div class="section-title">Oxirgi bonus sanasi</div>
+        <p class="value" id="admBonusDate">—</p>
+
+        <div class="section-title">Wallet</div>
+        <p class="value" id="admWallet">—</p>
+      </div>
+    </div>
+  </section>
 </div>
-<div class="row">
-  <button class="btn-secondary" onclick="insertToken('4')">4</button>
-  <button class="btn-secondary" onclick="insertToken('5')">5</button>
-  <button class="btn-secondary" onclick="insertToken('6')">6</button>
-  <button class="btn-secondary" onclick="insertToken('*')">*</button>
-</div>
-<div class="row">
-  <button class="btn-secondary" onclick="insertToken('1')">1</button>
-  <button class="btn-secondary" onclick="insertToken('2')">2</button>
-  <button class="btn-secondary" onclick="insertToken('3')">3</button>
-  <button class="btn-secondary" onclick="insertToken('-')">-</button>
-</div>
-<div class="row">
-  <button class="btn-secondary" onclick="insertToken('0')">0</button>
-  <button class="btn-secondary" onclick="insertToken('.')">.</button>
-  <button class="btn-secondary" onclick="insertToken('%')">%</button>
-  <button class="btn-secondary" onclick="insertToken('+')">+</button>
-</div>
 
-<div class="row">
-  <button class="btn-fn" onclick="insertToken('(')">(</button>
-  <button class="btn-fn" onclick="insertToken(')')">)</button>
-  <button class="btn-fn" onclick="insertToken('pi')">π</button>
-  <button class="btn-fn" onclick="insertToken('e')">e</button>
-</div>
-<div class="row">
-  <button class="btn-fn" onclick="insertToken('sqrt(')">sqrt</button>
-  <button class="btn-fn" onclick="insertToken('sin(')">sin</button>
-  <button class="btn-fn" onclick="insertToken('cos(')">cos</button>
-  <button class="btn-fn" onclick="insertToken('tan(')">tan</button>
-</div>
-<div class="row">
-  <button class="btn-fn" onclick="insertToken('log10(')">log10</button>
-  <button class="btn-fn" onclick="insertToken('log(')">ln</button>
-  <button class="btn-fn" onclick="insertToken('^')">^ (daraja)</button>
-  <button class="btn-fn" onclick="clearExpr()">🧹 Clear</button>
-</div>
+<script>
+  /* ======= GLOBAL STATE (localStorage) ======= */
+  const LS_KEY = "kamron_super_dapp_v1";
+  let state = {
+    points: 0,
+    bestPoints: 0,
+    calcCount: 0,
+    lastLogin: null,
+    dailyBonusDate: null,
+    multi: 1,
+    profileName: "",
+    walletAddress: null
+  };
 
-<button onclick="calc()">Hisoblash</button>
-<div id="result"></div>
-
-  </div>  <!-- Currency Converter -->  <div class="card">
-    <div class="section-title">🌍 Valyuta konvertori</div>
-    <div class="subtitle">Deyarli barcha jahon valyutalari. Kurslar onlayn API orqali olinadi.</div><div class="label-row">Miqdor</div>
-<input type="number" id="curAmount" placeholder="Masalan: 100" />
-
-<div class="label-row">Qaysi valyutadan</div>
-<select id="fromCur"></select>
-
-<div class="label-row">Qaysi valyutaga</div>
-<select id="toCur"></select>
-
-<button onclick="convertCurrency()">Hisoblash</button>
-<div id="fxResult"></div>
-<div class="subtitle" id="fxInfo"></div>
-
-  </div>  <script>
-    // ---------- Web3 wallet ----------
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-          document.getElementById("wallet").innerText = accounts[0];
-        } catch (err) {
-          alert("Ulanishda xatolik!");
-        }
-      } else {
-        alert("Metamask o'rnatilmagan. Iltimos, brauzeringizga Metamask extension qo'shing.");
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = Object.assign(state, parsed);
       }
+    } catch(e){}
+  }
+  function saveState() {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    refreshUI();
+  }
+
+  function resetLocal() {
+    if (confirm("Haqiqatan ham barcha local ma’lumotlarni o‘chirmoqchimisiz?")) {
+      localStorage.removeItem(LS_KEY);
+      state = {
+        points: 0,
+        bestPoints: 0,
+        calcCount: 0,
+        lastLogin: null,
+        dailyBonusDate: null,
+        multi: 1,
+        profileName: "",
+        walletAddress: null
+      };
+      refreshUI();
     }
+  }
 
-    // ---------- Super calculator ----------
-    function insertToken(token) {
-      const input = document.getElementById("expr");
-      const start = input.selectionStart || input.value.length;
-      const end = input.selectionEnd || input.value.length;
-      input.value = input.value.slice(0, start) + token + input.value.slice(end);
-      input.focus();
-      const pos = start + token.length;
-      input.setSelectionRange(pos, pos);
-    }
-
-    function clearExpr() {
-      document.getElementById("expr").value = "";
-      document.getElementById("result").innerText = "";
-    }
-
-    function calc() {
-      const expr = document.getElementById("expr").value.trim();
-      if (!expr) {
-        document.getElementById("result").innerText = "Iltimos, ifoda kiriting.";
-        return;
-      }
-      try {
-        const res = math.evaluate(expr);
-        document.getElementById("result").innerText = "Natija: " + res;
-      } catch (e) {
-        document.getElementById("result").innerText = "Xato ifoda yoki noto'g'ri funksiya!";
-      }
-    }
-
-    // ---------- Currency converter ----------
-    const currencyList = [
-      "USD","EUR","UZS","RUB","GBP","JPY","CNY","KZT","TRY","CHF","CAD","AUD","AED","SAR","INR",
-      "KRW","BRL","IDR","UAH","PLN","SEK","NOK","DKK","SGD","HKD","NZD","ZAR","MXN","NGN","THB"
-    ];
-
-    const fromCurSel = document.getElementById("fromCur");
-    const toCurSel = document.getElementById("toCur");
-
-    function fillCurrencies() {
-      currencyList.forEach(code => {
-        const opt1 = document.createElement("option");
-        opt1.value = code;
-        opt1.textContent = code;
-        fromCurSel.appendChild(opt1);
-
-        const opt2 = document.createElement("option");
-        opt2.value = code;
-        opt2.textContent = code;
-        toCurSel.appendChild(opt2);
+  /* ======= TABLAR ======= */
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const t = btn.dataset.tab;
+      document.querySelectorAll(".tab-page").forEach(p=>{
+        p.classList.toggle("active", p.id===t);
       });
-      fromCurSel.value = "USD";
-      toCurSel.value = "UZS";
+    });
+  });
+
+  /* ======= WEB3 / METAMASK ======= */
+  let web3;
+  let currentAccount = null;
+
+  const chainNames = {
+    1:"Ethereum Mainnet",
+    56:"BNB Chain",
+    137:"Polygon",
+    42161:"Arbitrum",
+    10:"Optimism"
+  };
+
+  async function connectMetamask() {
+    if (!window.ethereum) {
+      alert("Metamask topilmadi. Iltimos, brauzeringizga Metamask extension qo‘shing.");
+      return;
+    }
+    try {
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+      currentAccount = accounts[0];
+      web3 = new Web3(window.ethereum);
+      state.walletAddress = currentAccount;
+      state.lastLogin = new Date().toISOString();
+      saveState();
+      await refreshWalletInfo();
+      setupEthListeners();
+    } catch (e) {
+      console.error(e);
+      alert("Walletga ulanish bekor qilindi yoki xatolik yuz berdi.");
+    }
+  }
+
+  function setupEthListeners() {
+    if (!window.ethereum) return;
+    ethereum.removeAllListeners && ethereum.removeAllListeners();
+    ethereum.on("accountsChanged", async (acc)=>{
+      currentAccount = acc[0] || null;
+      state.walletAddress = currentAccount;
+      saveState();
+      await refreshWalletInfo();
+    });
+    ethereum.on("chainChanged", async ()=>{
+      await refreshWalletInfo();
+    });
+  }
+
+  async function refreshWalletInfo() {
+    const addr = currentAccount || state.walletAddress;
+    const statusEl = document.getElementById("walletStatus");
+    const addrEl = document.getElementById("walletAddress");
+    const dashAddr = document.getElementById("dashAddress");
+    const admWallet = document.getElementById("admWallet");
+    const netLabel = document.getElementById("netLabel");
+    const wNet = document.getElementById("walletNetwork");
+    const wBal = document.getElementById("walletBalance");
+    const dBal = document.getElementById("dashBalance");
+    const dBalFiat = document.getElementById("dashBalanceFiat");
+
+    if (!addr || !web3) {
+      statusEl.textContent = "Not connected";
+      addrEl.textContent = "—";
+      dashAddr.textContent = "—";
+      admWallet.textContent = "—";
+      netLabel.textContent = "Network: not connected";
+      wNet.textContent = "—";
+      wBal.textContent = "—";
+      dBal.textContent = "—";
+      dBalFiat.textContent = "";
+      return;
     }
 
-    let fxRatesCache = null;
-    let fxBase = null;
+    statusEl.textContent = "Connected";
+    addrEl.textContent = addr;
+    dashAddr.textContent = addr;
+    admWallet.textContent = addr;
 
-    async function convertCurrency() {
-      const amount = parseFloat(document.getElementById("curAmount").value);
-      const from = fromCurSel.value;
-      const to = toCurSel.value;
-      const resultEl = document.getElementById("fxResult");
-      const infoEl = document.getElementById("fxInfo");
+    try {
+      const chainIdHex = await ethereum.request({ method:"eth_chainId" });
+      const chainId = parseInt(chainIdHex,16);
+      const name = chainNames[chainId] || ("Chain ID: "+chainId);
+      netLabel.textContent = "Network: "+name;
+      wNet.textContent = name;
 
-      if (isNaN(amount)) {
-        resultEl.innerText = "Iltimos, miqdor kiriting.";
-        return;
-      }
-
-      try {
-        if (!fxRatesCache || fxBase !== from) {
-          infoEl.innerText = "Kurslar yuklanmoqda...";
-          const res = await fetch(`https://api.exchangerate.host/latest?base=${from}`);
-          const data = await res.json();
-          fxRatesCache = data.rates;
-          fxBase = from;
-          infoEl.innerText = `Manba: exchangerate.host | Sana: ${data.date}`;
-        }
-
-        const rate = fxRatesCache[to];
-        if (!rate) {
-          resultEl.innerText = "Bu juftlik uchun kurs topilmadi.";
-          return;
-        }
-        const converted = amount * rate;
-        resultEl.innerText = `${amount} ${from} ≈ ${converted.toFixed(4)} ${to}`;
-      } catch (err) {
-        resultEl.innerText = "Kurslarni olishda xatolik!";
-        console.error(err);
-      }
-    }
-
-    fillCurrencies();
-  </script></body>
-</html>
+      const wei = await web3.eth.getBalance(addr);
